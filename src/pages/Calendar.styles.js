@@ -21,6 +21,13 @@ export const RightSection = styled.div`
     display : flex;
 `
 
+export const RightSectionDetails = styled.div`
+    flex-basis : 0.6;
+    width : 60%;
+    padding : 20px 60px;
+    margin-top : 20px;
+`
+
 export const LeftSection = styled.div`
     flex-basis : 0.4;
     width : 40%;
@@ -39,6 +46,13 @@ export const MainTitle = styled.h2`
     color : black;
     font-size : 30px;
     margin-top : -10px;
+`
+
+export const MainTitleH3 = styled.h3`
+    color : black;
+    font-size : 24px;
+    margin-top : -10px;
+    margin-bottom : 30px;
 `
 
 export const Timing = styled.div`
@@ -114,6 +128,12 @@ export const NextButton = styled(SelectedButton)`
 export const Flex = styled.div`
     display : flex;
     align-items : center;
+`
+
+export const Text = styled.h5`
+    font-weight : bold;
+    color : black;
+    font-size : 15px;
 `
 
 
