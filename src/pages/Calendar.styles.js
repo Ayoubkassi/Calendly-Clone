@@ -7,6 +7,8 @@ export const Container = styled.div`
     max-height : 1200px;
     display : flex;
     border-radius : 6px;
+    margin: 0 auto;
+
 `
 
 export const RightSection = styled.div`
@@ -130,6 +132,12 @@ export const NextButton = styled(SelectedButton)`
 export const Flex = styled.div`
     display : flex;
     align-items : center;
+`
+export const Flexi = styled.div`
+    display : flex;
+    align-items : center;
+    justify-content : space-between;
+    padding : 20px 10px;
 `
 
 export const Text = styled.h5`

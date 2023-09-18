@@ -3,6 +3,7 @@ import './App.css'
 import Calendar from './pages/Calendar'
 import CalendarDetails from './pages/CalendarDetails'
 import Summit from './pages/Summit'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   //const [count, setCount] = useState(0)
@@ -11,7 +12,8 @@ function App() {
     <>
      {/* <Calendar /> */}
      {/* <CalendarDetails /> */}
-     <Summit />
+     {/* <Summit /> */}
+     <Dashboard />
     </>
   )
 }
