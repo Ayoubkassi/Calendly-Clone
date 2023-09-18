@@ -28,7 +28,10 @@ export default function CalendarDetails() {
             <RightSectionDetails>
                 <MainTitleH3>Enter Details</MainTitleH3>
                 <Text>Please share anything that will help prepare for our meeting</Text>
+                <TextField id="outlined-basic" label="Name" variant="outlined" style={{ marginBottom: '15px'}} sx={{ width: '80%' }} />
+                <TextField id="outlined-basic" label="Email" variant="outlined" style={{ marginBottom: '15px'}} sx={{ width: '80%' }} />
                 <TextField
+
                     id="outlined-multiline-static"
                     // label="Multiline"
                     multiline

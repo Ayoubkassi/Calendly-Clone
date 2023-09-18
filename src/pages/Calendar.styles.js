@@ -26,6 +26,8 @@ export const RightSectionDetails = styled.div`
     width : 60%;
     padding : 20px 60px;
     margin-top : 20px;
+    display : flex;
+    flex-direction : column;
 `
 
 export const LeftSection = styled.div`
