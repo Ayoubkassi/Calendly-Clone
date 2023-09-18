@@ -11,6 +11,15 @@ export const Container = styled.div`
     justify-content : start;
     align-items : center;
     flex-direction : column;
+    margin: 0 auto;
+
+`
+
+export const Line = styled.div`
+    width: 90%;
+    height: 1px; /* Adjust the height to change the line thickness */
+    background-color: gray; /* Adjust the color to change the line color */
+    margin : 0 auto;
 `
 
 export const Title = styled.h2`

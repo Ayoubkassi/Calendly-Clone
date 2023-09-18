@@ -28,7 +28,7 @@ export default function Summit() {
             <Button variant="outlined" startIcon={<GoogleIcon />}>
                 Sign up with Google
             </Button>
-            <Button variant="contained" endIcon={<MicrosoftIcon />}>
+            <Button variant="contained" startIcon={<MicrosoftIcon />}>
                 Sign up with Microsoft
             </Button>
         </Stack>
