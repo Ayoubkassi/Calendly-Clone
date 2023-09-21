@@ -3,6 +3,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
+const nodemailer = require('nodemailer'); 
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -84,18 +86,46 @@ app.delete('/api/v1/availabilities/:id', (req, res) => {
 });
 
 // Create reservation
-app.post('/api/v1/reservations', (req, res) => {
+app.post('/api/v1/reservations', async (req, res) => {
   const { start, end, title, email } = req.body;
   db.run(
     'INSERT INTO reservations (start, end, title, email) VALUES (?, ?, ?, ?)',
     [start, end, title, email],
-    (err) => {
+    async (err) => {
       if (err) {
         console.error(err.message);
         res.status(500).json({ error: 'Internal Server Error' });
         return;
       }
-      res.status(201).json({ message: 'Reservation created successfully' });
+      
+      // Create a transporter with your SMTP server details
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        service: 'Gmail', // You can use other SMTP providers as well
+        auth: {
+          user: 'akassi072@gmail.com',
+          pass: 'IKRAM.hiba2004',
+        },
+      });
+
+      // Email message
+      const mailOptions = {
+        from: 'ayoubkassi87@gmail.com',
+        to: email,
+        subject: 'Reservation Confirmation',
+        text: `Your reservation for ${title} on ${start} - ${end} has been confirmed. Here is the Google Meet link: INSERT_GOOGLE_MEET_LINK_HERE`,
+      };
+
+      try {
+        // Send the email
+        await transporter.sendMail(mailOptions);
+        res.status(201).json({ message: 'Reservation created successfully and email sent' });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error sending email' });
+      }
     }
   );
 });
