@@ -36,8 +36,21 @@ db.serialize(() => {
 
 // REST API endpoints for CRUD operations
 
+// List available slots
+app.get('/api/v1/availabilities', (req, res) => {
+  db.all('SELECT * FROM availabilities', (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+
 // Create availability
-app.post('/api/availabilities', (req, res) => {
+app.post('/api/v1/availabilities', (req, res) => {
   const { start, end } = req.body;
   db.run(
     'INSERT INTO availabilities (start, end) VALUES (?, ?)',
@@ -54,7 +67,7 @@ app.post('/api/availabilities', (req, res) => {
 });
 
 // Delete availability
-app.delete('/api/availabilities/:id', (req, res) => {
+app.delete('/api/v1/availabilities/:id', (req, res) => {
   const id = req.params.id;
   db.run(
     'DELETE FROM availabilities WHERE id = ?',
@@ -71,7 +84,7 @@ app.delete('/api/availabilities/:id', (req, res) => {
 });
 
 // Create reservation
-app.post('/api/reservations', (req, res) => {
+app.post('/api/v1/reservations', (req, res) => {
   const { start, end, title, email } = req.body;
   db.run(
     'INSERT INTO reservations (start, end, title, email) VALUES (?, ?, ?, ?)',
@@ -88,12 +101,12 @@ app.post('/api/reservations', (req, res) => {
 });
 
 // Delete reservation
-app.delete('/api/reservations/:id', (req, res) => {
+app.delete('/api/v1/reservations/:id', (req, res) => {
   const id = req.params.id;
-  const email = req.query.email;
+  //const email = req.query.email;
   db.run(
-    'DELETE FROM reservations WHERE id = ? AND email = ?',
-    [id, email],
+    'DELETE FROM reservations WHERE id = ?',
+    [id],
     (err) => {
       if (err) {
         console.error(err.message);
@@ -105,9 +118,9 @@ app.delete('/api/reservations/:id', (req, res) => {
   );
 });
 
-// List available slots
-app.get('/api/availabilities', (req, res) => {
-  db.all('SELECT * FROM availabilities', (err, rows) => {
+// List reservations
+app.get('/api/v1/reservations', (req, res) => {
+  db.all('SELECT * FROM reservations', (err, rows) => {
     if (err) {
       console.error(err.message);
       res.status(500).json({ error: 'Internal Server Error' });
@@ -116,6 +129,8 @@ app.get('/api/availabilities', (req, res) => {
     res.json(rows);
   });
 });
+
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
