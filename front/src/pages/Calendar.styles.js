@@ -8,7 +8,6 @@ export const Container = styled.div`
     display : flex;
     border-radius : 6px;
     margin: 0 auto;
-
 `
 
 export const RightSection = styled.div`

@@ -10,10 +10,10 @@ function App() {
 
   return (
     <>
-     {/* <Calendar /> */}
+     <Calendar />
      {/* <CalendarDetails /> */}
      {/* <Summit /> */}
-     <Dashboard />
+     {/* <Dashboard /> */}
     </>
   )
 }
