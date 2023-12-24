@@ -25,7 +25,7 @@ const bull = (
 export default function CardCom({dure , title , color}) {
   return (
     <>
-    <Card className='card' sx={{ minWidth: 400  , boxShadow: '0px 0px 10px 5px rgba(128, 128, 128, 0.3)' }}>
+    <Card className='card' sx={{ minWidth: 420  , boxShadow: '0px 0px 10px 5px rgba(128, 128, 128, 0.3)' }}>
     <div className="coloring"style={{ backgroundColor : color }} ></div>
       <CardContent>
         <Typography variant="h5" component="div">

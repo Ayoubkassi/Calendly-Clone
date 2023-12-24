@@ -9,6 +9,8 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import CardCom from './CardCom';
 import { Flex } from './Feed.styles';
+import FormEvent from './FormEvent';
+import GraphData from './GraphData';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -87,10 +89,10 @@ export default function Feed() {
             </>
         </TabPanel>
         <TabPanel value={value} index={1} dir={theme.direction}>
-          Item Two
+          <FormEvent />
         </TabPanel>
         <TabPanel value={value} index={2} dir={theme.direction}>
-          Item Three
+          <GraphData />
         </TabPanel>
       </SwipeableViews>
     </Box>
