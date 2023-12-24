@@ -12,4 +12,3 @@ Imagine people want to meet with you and are always asking for available slots i
 ![alt1](./Screens/scr2.png)
 ![alt1](./Screens/scr3.png)
 ![alt1](./Screens/scr4.png)
-
