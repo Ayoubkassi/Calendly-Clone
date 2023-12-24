@@ -11,6 +11,7 @@ import { Line } from '../pages/Summit.styles';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Flexi } from '../pages/Calendar.styles';
 import ShareIcon from '@mui/icons-material/Share';
+import '../App.css'
 
 const bull = (
   <Box
@@ -21,12 +22,14 @@ const bull = (
   </Box>
 );
 
-export default function CardCom({dure}) {
+export default function CardCom({dure , title , color}) {
   return (
-    <Card sx={{ minWidth: 375 , marginLeft : '100px' , boxShadow: '0px 0px 10px 5px rgba(128, 128, 128, 0.3)' }}>
+    <>
+    <Card className='card' sx={{ minWidth: 400  , boxShadow: '0px 0px 10px 5px rgba(128, 128, 128, 0.3)' }}>
+    <div className="coloring"style={{ backgroundColor : color }} ></div>
       <CardContent>
         <Typography variant="h5" component="div">
-          {dure} Minute  
+          {title}
         </Typography>
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
           {dure} min , One-on-One
@@ -44,5 +47,6 @@ export default function CardCom({dure}) {
         </Button>
       </Flexi>
     </Card>
+    </>
   )
 }
