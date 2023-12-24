@@ -39,3 +39,15 @@
 .read-the-docs {
   color: #888;
 } */
+
+
+.selected{
+  width : 100px !important;
+  height : 50px !important;
+  background: #73726e !important;
+  color : white !important;
+  font-weight : bold !important;
+  margin-bottom : 15px !important;
+  outline : none !important;
+  border: none !important;
+}
