@@ -11,9 +11,6 @@ function App() {
   return (
     <>
      <Calendar />
-     {/* <CalendarDetails /> */}
-     {/* <Summit /> */}
-     {/* <Dashboard /> */}
     </>
   )
 }

@@ -9,7 +9,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import TextField from '@mui/material/TextField';
 import { SubButton } from './CalendarDetails.styles';
 import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
-
+import { Link } from 'react-router-dom';
 
 export default function CalendarDetails() {
   return (
@@ -39,7 +39,7 @@ export default function CalendarDetails() {
                     defaultValue=""
                     sx={{ width: '80%' }}
                 />
-                <SubButton>Create Event</SubButton>
+                <SubButton><Link to="/summit" style={{ color : 'inherit' , textDecoration : 'none'}}>Create Event</Link></SubButton>
             </RightSectionDetails>
         </Container>
     </>
