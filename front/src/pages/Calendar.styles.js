@@ -81,6 +81,7 @@ export const Span = styled.div`
 export const Cols = styled.div`
     display : flex;
     flex-direction : column;
+    position : relative;
 `
 
 export const Date = styled.h4`
@@ -100,11 +101,12 @@ export const ButtonDate = styled.button`
     outline : none;
 
     &:first-of-type{
-        margin-top : 30px;
+        border-color : #2196f3;
     }
 
     &:hover{
         border : none;
+        border-color : #2196f3;
         outline : none;
         color : white;
         background : #2196f3;
@@ -146,3 +148,13 @@ export const Text = styled.h5`
 `
 
 
+export const WhiteContainer = styled.div`
+    background-color : white;
+    width : 215px;
+    height : 50px;
+    position : absolute;
+    z-index:999;
+    bottom : 35%;
+    left : 50.8%;
+    
+`
