@@ -160,25 +160,47 @@ app.post('/api/v1/users/:userId/reservations', async (req, res) => {
         }
 
         const transporter = nodemailer.createTransport({
-          // Email configuration
+          
+          service: 'gmail',
+          auth: {
+            user: 'ayoubkassi87@gmail.com',
+            pass: 'ehuw pijn pqyz ltdo'
+          }
+
         });
 
         const mailOptions = {
-          // Email options
+          from: 'ayoubkassi87@gmail.com',
+          to: email,
+          subject: `Welcome - Available for a first interview Ayoub?`,
+          text: `Hello Ayoub,
+        
+        Thank you for your interest in QAIS!
+        
+        Your profile is very interesting, and we would like to organize a first video call to discuss your background and answer any questions you may have.
+        
+        To make things easier, you can book a slot in my calendar to organize a video call: [Schedule Video Call](https://calendly.com/ayoub-kassi/60min)
+        
+        In order to be well prepared, have a look at our interview guide.
+        
+        I very much look forward to hearing back from you 🙏
+        
+        Ayoub Kassi`,
         };
+        
 
         // TO DO 
         // Develop mail sender here 
 
-        // try {
-        //   await transporter.sendMail(mailOptions);
-        //   res.status(201).json({ message: 'Reservation created successfully and email sent' });
-        // } catch (error) {
-        //   console.error(error);
-        //   res.status(500).json({ error: 'Error sending email' });
-        // }
+        try {
+          await transporter.sendMail(mailOptions);
+          res.status(201).json({ message: 'Reservation created successfully and email sent' });
+        } catch (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error sending email' });
+        }
 
-        res.status(201).json({ message: 'Reservation created successfully and email sent' });
+        //res.status(201).json({ message: 'Reservation created successfully and email sent' });
       }
     );
   } catch (error) {
