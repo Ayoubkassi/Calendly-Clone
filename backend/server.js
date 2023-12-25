@@ -53,52 +53,7 @@ db.serialize(() => {
 
 // REST API endpoints for CRUD operations
 
-// List available slots
-app.get('/api/v1/availabilities', (req, res) => {
-  db.all('SELECT * FROM availabilities', (err, rows) => {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Internal Server Error' });
-      return;
-    }
-    res.json(rows);
-  });
-});
 
-
-// Create availability
-app.post('/api/v1/availabilities', (req, res) => {
-  const { start, end } = req.body;
-  db.run(
-    'INSERT INTO availabilities (start, end) VALUES (?, ?)',
-    [start, end],
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      res.status(201).json({ message: 'Availability created successfully' });
-    }
-  );
-});
-
-// Delete availability
-app.delete('/api/v1/availabilities/:id', (req, res) => {
-  const id = req.params.id;
-  db.run(
-    'DELETE FROM availabilities WHERE id = ?',
-    [id],
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      res.json({ message: 'Availability deleted successfully' });
-    }
-  );
-});
 
 
 // CRUD operations for users
@@ -112,6 +67,20 @@ app.get('/api/v1/users', (req, res) => {
     res.json(rows);
   });
 });
+
+// Function to get a user by ID from the database
+const getUserById = async (userId) => {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT * FROM users WHERE id = ?', [userId], (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+};
+
 
 app.post('/api/v1/users', (req, res) => {
   const { username, email, password, userType } = req.body;
@@ -170,195 +139,331 @@ app.delete('/api/v1/users/:id', (req, res) => {
 // Create reservation specific to a user
 app.post('/api/v1/users/:userId/reservations', async (req, res) => {
   const userId = req.params.userId;
-  const { start, end, title, email } = req.body;
-  db.run(
-    'INSERT INTO reservations (start, end, title, email, userId) VALUES (?, ?, ?, ?, ?)',
-    [start, end, title, email, userId],
-    async (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
 
-      const transporter = nodemailer.createTransport({
-        // Email configuration
-      });
+  try {
+    const user = await getUserById(userId);
 
-      const mailOptions = {
-        // Email options
-      };
-
-      try {
-        await transporter.sendMail(mailOptions);
-        res.status(201).json({ message: 'Reservation created successfully and email sent' });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error sending email' });
-      }
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-  );
+
+    const { start, end, title, email } = req.body;
+    db.run(
+      'INSERT INTO reservations (start, end, title, email, userId) VALUES (?, ?, ?, ?, ?)',
+      [start, end, title, email, userId],
+      async (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
+        }
+
+        const transporter = nodemailer.createTransport({
+          // Email configuration
+        });
+
+        const mailOptions = {
+          // Email options
+        };
+
+        // TO DO 
+        // Develop mail sender here 
+
+        // try {
+        //   await transporter.sendMail(mailOptions);
+        //   res.status(201).json({ message: 'Reservation created successfully and email sent' });
+        // } catch (error) {
+        //   console.error(error);
+        //   res.status(500).json({ error: 'Error sending email' });
+        // }
+
+        res.status(201).json({ message: 'Reservation created successfully and email sent' });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Read all reservations specific to a user
-app.get('/api/v1/users/:userId/reservations', (req, res) => {
+app.get('/api/v1/users/:userId/reservations', async (req, res) => {
   const userId = req.params.userId;
-  db.all('SELECT * FROM reservations WHERE userId = ?', [userId], (err, rows) => {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Internal Server Error' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json(rows);
-  });
+
+    console.log('passeeed');
+
+    db.all('SELECT * FROM reservations WHERE userId = ?', [userId], (err, rows) => {
+      if (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+      res.json(rows);
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Read a specific reservation for a user
-app.get('/api/v1/users/:userId/reservations/:id', (req, res) => {
+app.get('/api/v1/users/:userId/reservations/:id', async (req, res) => {
   const userId = req.params.userId;
   const id = req.params.id;
-  db.get('SELECT * FROM reservations WHERE id = ? AND userId = ?', [id, userId], (err, row) => {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Internal Server Error' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    if (!row) {
-      res.status(404).json({ error: 'Reservation not found for the user' });
-      return;
-    }
+    db.get('SELECT * FROM reservations WHERE id = ? AND userId = ?', [id, userId], (err, row) => {
+      if (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
 
-    res.json(row);
-  });
+      if (!row) {
+        res.status(404).json({ error: 'Reservation not found for the user' });
+        return;
+      }
+
+      res.json(row);
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Update reservation specific to a user
-app.put('/api/v1/users/:userId/reservations/:id', (req, res) => {
+app.put('/api/v1/users/:userId/reservations/:id', async (req, res) => {
   const userId = req.params.userId;
   const id = req.params.id;
   const { start, end, title, email } = req.body;
-  db.run(
-    'UPDATE reservations SET start = ?, end = ?, title = ?, email = ? WHERE id = ? AND userId = ?',
-    [start, end, title, email, id, userId],
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      res.json({ message: 'Reservation updated successfully' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-  );
+
+    db.run(
+      'UPDATE reservations SET start = ?, end = ?, title = ?, email = ? WHERE id = ? AND userId = ?',
+      [start, end, title, email, id, userId],
+      (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
+        }
+        res.json({ message: 'Reservation updated successfully' });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Delete reservation specific to a user
-app.delete('/api/v1/users/:userId/reservations/:id', (req, res) => {
+app.delete('/api/v1/users/:userId/reservations/:id', async (req, res) => {
   const userId = req.params.userId;
   const id = req.params.id;
-  db.run(
-    'DELETE FROM reservations WHERE id = ? AND userId = ?',
-    [id, userId],
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      res.json({ message: 'Reservation deleted successfully' });
-    }
-  );
-});
 
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    db.run(
+      'DELETE FROM reservations WHERE id = ? AND userId = ?',
+      [id, userId],
+      (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
+        }
+        res.json({ message: 'Reservation deleted successfully' });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 
 // Create availability specific to a user
-app.post('/api/v1/users/:userId/availabilities', (req, res) => {
+app.post('/api/v1/users/:userId/availabilities', async (req, res) => {
   const userId = req.params.userId;
-  const { start, end } = req.body;
-  db.run(
-    'INSERT INTO availabilities (start, end, userId) VALUES (?, ?, ?)',
-    [start, end, userId],
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      res.status(201).json({ message: 'Availability created successfully' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-  );
+
+    const { start, end } = req.body;
+    db.run(
+      'INSERT INTO availabilities (start, end, userId) VALUES (?, ?, ?)',
+      [start, end, userId],
+      (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
+        }
+        res.status(201).json({ message: 'Availability created successfully' });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Read all availabilities specific to a user
-app.get('/api/v1/users/:userId/availabilities', (req, res) => {
+app.get('/api/v1/users/:userId/availabilities', async (req, res) => {
   const userId = req.params.userId;
-  db.all('SELECT * FROM availabilities WHERE userId = ?', [userId], (err, rows) => {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Internal Server Error' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json(rows);
-  });
+
+    db.all('SELECT * FROM availabilities WHERE userId = ?', [userId], (err, rows) => {
+      if (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+      res.json(rows);
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Read a specific availability for a user
-app.get('/api/v1/users/:userId/availabilities/:id', (req, res) => {
+app.get('/api/v1/users/:userId/availabilities/:id', async (req, res) => {
   const userId = req.params.userId;
   const id = req.params.id;
-  db.get('SELECT * FROM availabilities WHERE id = ? AND userId = ?', [id, userId], (err, row) => {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Internal Server Error' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    if (!row) {
-      res.status(404).json({ error: 'Availability not found for the user' });
-      return;
-    }
+    db.get('SELECT * FROM availabilities WHERE id = ? AND userId = ?', [id, userId], (err, row) => {
+      if (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
 
-    res.json(row);
-  });
+      if (!row) {
+        res.status(404).json({ error: 'Availability not found for the user' });
+        return;
+      }
+
+      res.json(row);
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Update availability specific to a user
-app.put('/api/v1/users/:userId/availabilities/:id', (req, res) => {
+app.put('/api/v1/users/:userId/availabilities/:id', async (req, res) => {
   const userId = req.params.userId;
   const id = req.params.id;
   const { start, end } = req.body;
-  db.run(
-    'UPDATE availabilities SET start = ?, end = ? WHERE id = ? AND userId = ?',
-    [start, end, id, userId],
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      res.json({ message: 'Availability updated successfully' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-  );
+
+    db.run(
+      'UPDATE availabilities SET start = ?, end = ? WHERE id = ? AND userId = ?',
+      [start, end, id, userId],
+      (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
+        }
+        res.json({ message: 'Availability updated successfully' });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Delete availability specific to a user
-app.delete('/api/v1/users/:userId/availabilities/:id', (req, res) => {
+app.delete('/api/v1/users/:userId/availabilities/:id', async (req, res) => {
   const userId = req.params.userId;
   const id = req.params.id;
-  db.run(
-    'DELETE FROM availabilities WHERE id = ? AND userId = ?',
-    [id, userId],
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      res.json({ message: 'Availability deleted successfully' });
+
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-  );
+
+    db.run(
+      'DELETE FROM availabilities WHERE id = ? AND userId = ?',
+      [id, userId],
+      (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
+        }
+        res.json({ message: 'Availability deleted successfully' });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 
