@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import CalendarDetails from './pages/CalendarDetails.jsx'
 import Summit from './pages/Summit.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 import './index.css'
 import {
   createBrowserRouter,
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: "summit",
     element: <Summit />
+  },
+  {
+    path: "dashboard",
+    element: <Dashboard />
   },
 ]);
 
