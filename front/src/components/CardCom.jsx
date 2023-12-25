@@ -24,7 +24,7 @@ const bull = (
 
 export default function CardCom({dure , title , color}) {
   return (
-    <>
+    <div style={{ marginRight : '5vw' }}>
     <Card className='card' sx={{ minWidth: 420  , boxShadow: '0px 0px 10px 5px rgba(128, 128, 128, 0.3)' }}>
     <div className="coloring"style={{ backgroundColor : color }} ></div>
       <CardContent>
@@ -47,6 +47,6 @@ export default function CardCom({dure , title , color}) {
         </Button>
       </Flexi>
     </Card>
-    </>
+    </div>
   )
 }

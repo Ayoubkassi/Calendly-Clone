@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const nodemailer = require('nodemailer'); 
+const cors = require('cors'); // Import the cors middleware
 
 
 const app = express();
@@ -11,6 +12,7 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.json());
+app.use(cors());
 
 // SQLite Database setup
 const db = new sqlite3.Database('./database.db');
@@ -42,6 +44,7 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       start DATETIME NOT NULL,
       end DATETIME NOT NULL,
+      minutes INTEGER,
       title TEXT NOT NULL,
       email TEXT NOT NULL,
       userId INTEGER,
@@ -148,10 +151,12 @@ app.post('/api/v1/users/:userId/reservations', async (req, res) => {
       return;
     }
 
-    const { start, end, title, email } = req.body;
+    // Extracting values from the request body and setting default values if not provided
+    const { start = 'Default Start Time', end = 'Default End Time', title, email , minutes } = req.body;
+
     db.run(
-      'INSERT INTO reservations (start, end, title, email, userId) VALUES (?, ?, ?, ?, ?)',
-      [start, end, title, email, userId],
+      'INSERT INTO reservations (start, end, title, email, minutes ,  userId) VALUES (?, ?, ?, ?, ?, ?)',
+      [start, end, title, email, minutes , userId],
       async (err) => {
         if (err) {
           console.error(err.message);
@@ -160,13 +165,11 @@ app.post('/api/v1/users/:userId/reservations', async (req, res) => {
         }
 
         const transporter = nodemailer.createTransport({
-          
           service: 'gmail',
           auth: {
             user: 'ayoubkassi87@gmail.com',
-            pass: 'ehuw pijn pqyz ltdo'
-          }
-
+            pass: 'ehuw pijn pqyz ltdo',
+          },
         });
 
         const mailOptions = {
@@ -174,23 +177,19 @@ app.post('/api/v1/users/:userId/reservations', async (req, res) => {
           to: email,
           subject: `Welcome - Available for a first interview Ayoub?`,
           text: `Hello Ayoub,
-        
-        Thank you for your interest in QAIS!
-        
-        Your profile is very interesting, and we would like to organize a first video call to discuss your background and answer any questions you may have.
-        
-        To make things easier, you can book a slot in my calendar to organize a video call: [Schedule Video Call](https://calendly.com/ayoub-kassi/60min)
-        
-        In order to be well prepared, have a look at our interview guide.
-        
-        I very much look forward to hearing back from you 🙏
-        
-        Ayoub Kassi`,
-        };
-        
 
-        // TO DO 
-        // Develop mail sender here 
+          Thank you for your interest in QAIS!
+
+          Your profile is very interesting, and we would like to organize a first video call to discuss your background and answer any questions you may have.
+
+          To make things easier, you can book a slot in my calendar to organize a video call: [Schedule Video Call](https://calendly.com/ayoub-kassi/60min)
+
+          In order to be well prepared, have a look at our interview guide.
+
+          I very much look forward to hearing back from you 🙏
+
+          Ayoub Kassi`,
+        };
 
         try {
           await transporter.sendMail(mailOptions);
@@ -199,8 +198,6 @@ app.post('/api/v1/users/:userId/reservations', async (req, res) => {
           console.error(error);
           res.status(500).json({ error: 'Error sending email' });
         }
-
-        //res.status(201).json({ message: 'Reservation created successfully and email sent' });
       }
     );
   } catch (error) {
@@ -208,6 +205,7 @@ app.post('/api/v1/users/:userId/reservations', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 // Read all reservations specific to a user
 app.get('/api/v1/users/:userId/reservations', async (req, res) => {
@@ -221,7 +219,6 @@ app.get('/api/v1/users/:userId/reservations', async (req, res) => {
       return;
     }
 
-    console.log('passeeed');
 
     db.all('SELECT * FROM reservations WHERE userId = ?', [userId], (err, rows) => {
       if (err) {
@@ -274,7 +271,7 @@ app.get('/api/v1/users/:userId/reservations/:id', async (req, res) => {
 app.put('/api/v1/users/:userId/reservations/:id', async (req, res) => {
   const userId = req.params.userId;
   const id = req.params.id;
-  const { start, end, title, email } = req.body;
+  const { start, end, title, email , minutes } = req.body;
 
   try {
     const user = await getUserById(userId);
@@ -285,8 +282,8 @@ app.put('/api/v1/users/:userId/reservations/:id', async (req, res) => {
     }
 
     db.run(
-      'UPDATE reservations SET start = ?, end = ?, title = ?, email = ? WHERE id = ? AND userId = ?',
-      [start, end, title, email, id, userId],
+      'UPDATE reservations SET start = ?, end = ?, title = ?, email = ? , minutes = ? WHERE id = ? AND userId = ?',
+      [start, end, title, email, minutes , id, userId],
       (err) => {
         if (err) {
           console.error(err.message);
