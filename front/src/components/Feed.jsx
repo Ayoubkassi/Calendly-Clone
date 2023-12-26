@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import SwipeableViews from 'react-swipeable-views';
 import { useTheme } from '@mui/material/styles';
@@ -47,7 +47,8 @@ function a11yProps(index) {
 
 export default function Feed() {
   const theme = useTheme();
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = useState(0);
+  const [reservations, setReservations] = useState([]);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -56,6 +57,26 @@ export default function Feed() {
   const handleChangeIndex = (index) => {
     setValue(index);
   };
+
+   // Function to get reservations
+   const getReservations = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/users/1/reservations');
+      if (response.ok) {
+        const data = await response.json();
+        setReservations(data); // Update the reservations state with the fetched data
+      } else {
+        console.error('Failed to get reservations:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error getting reservations:', error.message);
+    }
+  };
+
+  // useEffect to fetch reservations when the component mounts
+  useEffect(() => {
+    getReservations();
+  }, [reservations]); // The empty dependency array ensures this effect runs only once, equivalent to componentDidMount
 
   return (
     <Box sx={{ bgcolor: 'background.paper' , width : '85vw' , marginLeft : '-14vw' }}>
@@ -81,15 +102,19 @@ export default function Feed() {
         <TabPanel value={value} index={0} dir={theme.direction}>
             <>
             <Flex>
-                <CardCom dure={15} title="Interview back end intern"  />
+
+            {reservations.map(({ minutes , title , id }) => (
+              <CardCom title={title} dure={minutes} key={id} />
+            ))}
+                {/* <CardCom dure={15} title="Interview back end intern"  />
                 <CardCom dure={60} title="RH Alternance" color="#e36e14" />
                 <CardCom dure={30} title="Webinar"  />
-                <CardCom dure={45} title="Team meet"  />
+                <CardCom dure={45} title="Team meet"  /> */}
             </Flex>
             </>
         </TabPanel>
         <TabPanel value={value} index={1} dir={theme.direction}>
-          <FormEvent />
+          <FormEvent onChange = { handleChangeIndex } />
         </TabPanel>
         <TabPanel value={value} index={2} dir={theme.direction}>
           <GraphData />
