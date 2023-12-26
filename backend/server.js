@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 const cors = require('cors'); // Import the cors middleware
 const port = process.env.PORT || 3000;
 const axios = require('axios');
+const moment = require('moment-timezone');
 
 
 
@@ -151,25 +152,38 @@ function calculateAvailabilities(startOfDay, endOfDay, events) {
 // });
 
 
-app.get('/getGoogleCalendarEvents', async (req, res) => {
+app.get('/getGoogleCalendarEvents/:date', async (req, res) => {
+  const { date } = req.params;
+  const timeZone = 'Europe/Paris'; // Adjust the time zone as needed
+
+  // Format date and time using moment-timezone
+  const startOfDay = moment.tz(`${date}T00:00:00`, timeZone).toISOString();
+  const endOfDay = moment.tz(`${date}T23:59:59`, timeZone).toISOString();
+  
   try {
     const calendar = google.calendar({
       version: 'v3',
       auth: oauth2Client,
     });
 
-    const calendarId = 'primary'; // You can replace 'primary' with your calendar ID
+    const calendarId = 'primary';
 
     const response = await calendar.events.list({
       calendarId: calendarId,
+      timeMin: startOfDay,
+      timeMax: endOfDay,
     });
 
-    res.json(response.data);
+    const events = response.data.items;
+    const availabilities = calculateAvailabilities(startOfDay, endOfDay, events);
+    res.json({ availabilities });
+
   } catch (error) {
     console.log('Error during calendar API request:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 
