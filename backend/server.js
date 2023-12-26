@@ -6,6 +6,8 @@ const sqlite3 = require('sqlite3').verbose();
 const nodemailer = require('nodemailer'); 
 const cors = require('cors'); // Import the cors middleware
 const port = process.env.PORT || 3000;
+const axios = require('axios');
+
 
 
 const { google } = require('googleapis');
@@ -15,6 +17,9 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
+
+// Set the time zone to Central European Time (CET)
+const timeZone = 'Europe/Paris';
 
 const oauth2Client = new google.auth.OAuth2(
   '360894342475-80abkr8kso2jo5at95ohugpl6o2bv98e.apps.googleusercontent.com',
@@ -26,14 +31,18 @@ const oauth2Client = new google.auth.OAuth2(
 app.get('/auth/google', (req, res) => {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: ['https://www.googleapis.com/auth/calendar.events'],
+    scope: ['https://www.googleapis.com/auth/calendar'],
   });
   res.redirect(authUrl);
 });
 
+let tokenizer;
+
 app.get('/auth/google/callback', async (req, res) => {
   const { code } = req.query;
   const { tokens } = await oauth2Client.getToken(code);
+  tokenizer = tokens;
+  console.log('token',tokens);
   oauth2Client.setCredentials(tokens);
   res.send('Authentication successful!');
 });
@@ -42,9 +51,6 @@ app.get('/auth/google/callback', async (req, res) => {
 app.get('/create-meet-link', async (req, res) => {
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-  // Set the time zone to Central European Time (CET)
-  const timeZone = 'Europe/Paris';
-
   // Specify the email of the participant to invite
   const participantEmail = 'ayoubkassi.contact@gmail.com';
 
@@ -52,11 +58,11 @@ app.get('/create-meet-link', async (req, res) => {
     summary: 'Back End Engineer Intern',
     description: 'Meeting Description',
     start: {
-      dateTime: '2023-12-31T15:00:00',
+      dateTime: '2023-12-31T16:20:00',
       timeZone: timeZone,
     },
     end: {
-      dateTime: '2023-12-31T16:00:00',
+      dateTime: '2023-12-31T17:00:00',
       timeZone: timeZone,
     },
     conferenceData: {
@@ -85,6 +91,83 @@ app.get('/create-meet-link', async (req, res) => {
   } catch (error) {
     console.error('Error creating event:', error.message);
     res.status(500).send('Error creating event');
+  }
+});
+
+
+// Helper function to calculate availabilities
+function calculateAvailabilities(startOfDay, endOfDay, events) {
+  const availabilities = [];
+
+  // Add initial availability from startOfDay to the first event (if any)
+  const firstEventStart = events.length > 0 ? events[0].start.dateTime : endOfDay;
+  availabilities.push({ start: startOfDay, end: firstEventStart });
+
+  // Iterate through events to find gaps between them
+  for (let i = 0; i < events.length - 1; i++) {
+    const currentEventEnd = events[i].end.dateTime;
+    const nextEventStart = events[i + 1].start.dateTime;
+    availabilities.push({ start: currentEventEnd, end: nextEventStart });
+  }
+
+  // Add the final availability from the last event (if any) to endOfDay
+  const lastEventEnd = events.length > 0 ? events[events.length - 1].end.dateTime : startOfDay;
+  availabilities.push({ start: lastEventEnd, end: endOfDay });
+
+  return availabilities;
+}
+
+// app.get('/get-availabilities/:date', async (req, res) => {
+//   // console.log('Raw request:', req.rawHeaders);
+//   const { date } = req.params;
+//   const startOfDay = `${date}T00:00:00${timeZone}`;
+//   const endOfDay = `${date}T23:59:59${timeZone}`;
+
+//   try {
+//     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+//     console.log('test');
+//     const response = await calendar.events.list({
+//       calendarId: 'primary',
+//       timeMin: startOfDay,
+//       timeMax: endOfDay,
+//       timeZone: timeZone,
+//       maxResults: 20, // Adjust as needed
+//       singleEvents: true,
+//       orderBy: 'startTime',
+//     });
+
+
+
+//     console.log('Google Calendar API response:', response);
+
+//     const events = response.data.items;
+//     const availabilities = calculateAvailabilities(startOfDay, endOfDay, events);
+
+//     res.json({ availabilities });
+//   } catch (error) {
+//     console.error('Error getting availabilities:', error);
+//     res.status(500).send('Error getting availabilities');
+//   }
+// });
+
+
+app.get('/getGoogleCalendarEvents', async (req, res) => {
+  try {
+    const calendar = google.calendar({
+      version: 'v3',
+      auth: oauth2Client,
+    });
+
+    const calendarId = 'primary'; // You can replace 'primary' with your calendar ID
+
+    const response = await calendar.events.list({
+      calendarId: calendarId,
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.log('Error during calendar API request:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
