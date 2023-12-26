@@ -45,15 +45,18 @@ app.get('/create-meet-link', async (req, res) => {
   // Set the time zone to Central European Time (CET)
   const timeZone = 'Europe/Paris';
 
+  // Specify the email of the participant to invite
+  const participantEmail = 'ayoubkassi.contact@gmail.com';
+
   const event = {
-    summary: 'Meeting Title',
+    summary: 'Back End Engineer Intern',
     description: 'Meeting Description',
     start: {
-      dateTime: '2023-12-27T10:00:00',
+      dateTime: '2023-12-31T15:00:00',
       timeZone: timeZone,
     },
     end: {
-      dateTime: '2023-12-27T11:00:00',
+      dateTime: '2023-12-31T16:00:00',
       timeZone: timeZone,
     },
     conferenceData: {
@@ -64,6 +67,10 @@ app.get('/create-meet-link', async (req, res) => {
         },
       },
     },
+    attendees: [
+      { email: participantEmail }
+      // Add more participants if needed
+    ],
   };
 
   try {
@@ -80,6 +87,7 @@ app.get('/create-meet-link', async (req, res) => {
     res.status(500).send('Error creating event');
   }
 });
+
 
 
 
