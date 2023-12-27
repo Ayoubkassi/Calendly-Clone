@@ -1,4 +1,3 @@
-// index.js
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -100,56 +99,54 @@ app.get('/create-meet-link', async (req, res) => {
 function calculateAvailabilities(startOfDay, endOfDay, events) {
   const availabilities = [];
 
+  // Helper function to format time in HH:mm format
+  function formatTime(date) {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  // Helper function to split an interval into 1-hour intervals
+  function splitInterval(intervalStart, intervalEnd) {
+    const intervals = [];
+
+    let currentStart = new Date(intervalStart);
+
+    while (currentStart < intervalEnd) {
+      const currentEnd = new Date(currentStart.getTime() + 60 * 60 * 1000);
+
+      // Ensure the currentEnd does not exceed the intervalEnd
+      const end = currentEnd <= intervalEnd ? currentEnd : intervalEnd;
+
+      intervals.push({ start: formatTime(currentStart), end: formatTime(end) });
+
+      currentStart = end;
+    }
+
+    return intervals;
+  }
+
   // Add initial availability from startOfDay to the first event (if any)
-  const firstEventStart = events.length > 0 ? events[0].start.dateTime : endOfDay;
-  availabilities.push({ start: startOfDay, end: firstEventStart });
+  const firstEventStart = events.length > 0 ? new Date(events[0].start.dateTime) : new Date(endOfDay);
+  availabilities.push(...splitInterval(new Date(startOfDay), firstEventStart));
 
   // Iterate through events to find gaps between them
   for (let i = 0; i < events.length - 1; i++) {
-    const currentEventEnd = events[i].end.dateTime;
-    const nextEventStart = events[i + 1].start.dateTime;
-    availabilities.push({ start: currentEventEnd, end: nextEventStart });
+    const currentEventEnd = new Date(events[i].end.dateTime);
+    const nextEventStart = new Date(events[i + 1].start.dateTime);
+
+    availabilities.push(...splitInterval(currentEventEnd, nextEventStart));
   }
 
   // Add the final availability from the last event (if any) to endOfDay
-  const lastEventEnd = events.length > 0 ? events[events.length - 1].end.dateTime : startOfDay;
-  availabilities.push({ start: lastEventEnd, end: endOfDay });
+  const lastEventEnd = events.length > 0 ? new Date(events[events.length - 1].end.dateTime) : new Date(startOfDay);
+  availabilities.push(...splitInterval(lastEventEnd, new Date(endOfDay)));
 
   return availabilities;
 }
 
-// app.get('/get-availabilities/:date', async (req, res) => {
-//   // console.log('Raw request:', req.rawHeaders);
-//   const { date } = req.params;
-//   const startOfDay = `${date}T00:00:00${timeZone}`;
-//   const endOfDay = `${date}T23:59:59${timeZone}`;
-
-//   try {
-//     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-//     console.log('test');
-//     const response = await calendar.events.list({
-//       calendarId: 'primary',
-//       timeMin: startOfDay,
-//       timeMax: endOfDay,
-//       timeZone: timeZone,
-//       maxResults: 20, // Adjust as needed
-//       singleEvents: true,
-//       orderBy: 'startTime',
-//     });
 
 
-
-//     console.log('Google Calendar API response:', response);
-
-//     const events = response.data.items;
-//     const availabilities = calculateAvailabilities(startOfDay, endOfDay, events);
-
-//     res.json({ availabilities });
-//   } catch (error) {
-//     console.error('Error getting availabilities:', error);
-//     res.status(500).send('Error getting availabilities');
-//   }
-// });
 
 
 app.get('/getGoogleCalendarEvents/:date', async (req, res) => {
