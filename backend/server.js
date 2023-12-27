@@ -14,20 +14,68 @@ const { google } = require('googleapis');
 
 const app = express();
 
-// Middleware
-app.use(bodyParser.json());
-app.use(cors());
+
 
 // Set the time zone to Central European Time (CET)
 const timeZone = 'Europe/Paris';
 
-const oauth2Client = new google.auth.OAuth2(
-  '360894342475-80abkr8kso2jo5at95ohugpl6o2bv98e.apps.googleusercontent.com',
-  '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',
-  'http://localhost:3000/auth/google/callback'
-);
+const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = require('./config');
+const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+
+// Middleware
+app.use(bodyParser.json());
+app.use(cors());
 
 
+// Custom middleware to initialize the Google Calendar API
+const initializeGoogleCalendar = async (req, res, next) => {
+  try {
+    console.log('Inside initializeGoogleCalendar middleware');
+
+    // Check if the access token is expired or not present
+    if (!oauth2Client.credentials || oauth2Client.credentials.expiry_date < Math.floor(Date.now() / 1000)) {
+      console.log('Refreshing token or initiating authorization process');
+
+      // Store the original request URL in the session or another storage
+      req.session = req.session || {};
+      req.session.originalUrl = req.originalUrl;
+
+      // Initiate the authorization process
+      const authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: ['https://www.googleapis.com/auth/calendar'],
+      });
+
+      // Redirect the user to the authorization URL
+      return res.redirect(authUrl);
+    }
+
+    console.log('Access token is valid');
+
+    // If the access token is still valid, proceed with API request
+    oauth2Client.setCredentials({
+      access_token: oauth2Client.credentials.access_token,
+      refresh_token: oauth2Client.credentials.refresh_token,
+      // Add any other necessary fields from the credentials
+    });
+
+    req.calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    req.timeZone = timeZone;
+
+    next();
+  } catch (error) {
+    console.error('Error during token check:', error.message);
+    res.status(500).send('Error during token check');
+  }
+};
+
+
+
+// Apply the middleware to routes that require Google Calendar API
+app.use(['/create-meet-link', '/getGoogleCalendarEvents/:date'], initializeGoogleCalendar);
+
+
+// Routes
 app.get('/auth/google', (req, res) => {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -36,20 +84,27 @@ app.get('/auth/google', (req, res) => {
   res.redirect(authUrl);
 });
 
-let tokenizer;
 
 app.get('/auth/google/callback', async (req, res) => {
-  const { code } = req.query;
-  const { tokens } = await oauth2Client.getToken(code);
-  tokenizer = tokens;
-  console.log('token',tokens);
-  oauth2Client.setCredentials(tokens);
-  res.send('Authentication successful!');
+  try {
+    const { code } = req.query;
+    const { tokens } = await oauth2Client.getToken(code);
+
+    // Ensure tokens include both access_token and refresh_token
+    console.log('tokens', tokens);
+
+    oauth2Client.setCredentials(tokens);
+    res.send('Authentication successful!');
+  } catch (error) {
+    console.error('Error during OAuth2 callback:', error.message);
+    res.status(500).send('Error during OAuth2 callback');
+  }
 });
 
 
+
 app.get('/create-meet-link', async (req, res) => {
-  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+  const { calendar, timeZone } = req;
 
   // Specify the email of the participant to invite
   const participantEmail = 'ayoubkassi.contact@gmail.com';
@@ -150,8 +205,9 @@ function calculateAvailabilities(startOfDay, endOfDay, events) {
 
 
 app.get('/getGoogleCalendarEvents/:date', async (req, res) => {
+  const { calendar, timeZone } = req;
   const { date } = req.params;
-  const timeZone = 'Europe/Paris'; // Adjust the time zone as needed
+
 
   // Format date and time using moment-timezone
   const startOfDay = moment.tz(`${date}T00:00:00`, timeZone).toISOString();

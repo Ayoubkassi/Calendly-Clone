@@ -113,6 +113,17 @@ export const ButtonDate = styled.button`
     }
 
 `
+
+export const TimeScroller = styled.div`
+  max-height: 30vw;
+  overflow-y: auto; 
+  scrollbar-width: none; 
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
 export const SelectedButton = styled.button`
     width : 100px;
     height : 50px;
@@ -121,6 +132,7 @@ export const SelectedButton = styled.button`
     font-weight : bold;
     margin-bottom : 15px;
     outline : none;
+    padding : 0 !important;
 
 `
 
