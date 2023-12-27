@@ -166,7 +166,7 @@ export const WhiteContainer = styled.div`
     height : 50px;
     position : absolute;
     z-index:999;
-    bottom : 35%;
+    bottom : 20%;
     left : 50.8%;
     
 `
